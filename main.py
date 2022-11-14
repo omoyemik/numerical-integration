@@ -1,86 +1,44 @@
-from math import *
-def f(x):
-    return 0.5 + x*x  # This is the function we will integrate
+#clouds assignment 2 - Ex 1 --using Python, Flask
+from flask import Flask
+import numpy as np
+import math
 
-def integLeft(a, b, f, nbins=10):
-    '''Return the integral from a to b of function f using the left hand rule
+app = Flask(__name__) 
 
-    >>> integLeft(0, 1, f, 4)
-    0.71875
-    '''
-    h = float(b - a) / nbins  # allow input of integer a and b
-    assert h > 0  # warn if b not > a
-    assert type(nbins) == int
-
-    sum = 0.0
-    for n in range(nbins):  # [0, 1, ... nbins-1]
-        sum = sum + h * f(a + n * h)  # left hand rule
-
-    return sum
+@app.route("/")
+def hello_world():
+    return "<p>Microservice Numerical Integration</p>"
 
 
-def integMid(a, b, f, nbins=10):
-    '''Return the integral from a to b of function f using the midpoint rule
-
-    >>> integMid(0, 1, f, 4)
-    0.828125
-    '''
-    h = float(b - a) / nbins
-    assert h > 0
-    assert type(nbins) == int
-
-    sum = 0.0
-    x = a + h / 2  # first midpoint
-    while (x < b):
-        sum += h * f(x)
-        x += h
-
-    return sum
+@app.route("/integration/<lower>/<upper>")
+def num_int(lower,upper):
+    
+    integral = numerical_integration(float(lower),float(upper))
+    #print(integral)
+    return f"<p>Result for N = [10,100,1000,10000,100000, 1000000] is: {integral}</p>"
 
 
-def integTrap(a, b, f, nbins=10):
-    '''Return the integral from a to b of function f using trapezoidal rule
+def numerical_integration(lower, upper) :
+    
+    #defining function using lambda
+    f = lambda x : abs(math.sin(x))
 
-    >>> integTrap(0, 1, f, 4)
-    0.84375
-    '''
-    h = float(b - a) / nbins
-    assert h > 0
-    assert type(nbins) == int
+    f = np.vectorize(f)
+    r = []
 
-    sum = (h / 2) * (f(a) + f(b))  # endpoints are special
-    for n in range(1, nbins):  # [1, 2, ... nbins-1]
-        sum += h * f(a + n * h)
+    for i in range(1,7):
 
-    return sum
-if __name__ == '__main__':
-    def table_of_errors(a, b, f, exact):
-        print("nbins       Left         Mid           Trap")
+        N = 10**i #use N = [10,100,1000,10000,100000, 1000000]
 
-        for nbins in [4, 40, 400]:
-            print('%4s %13.9f %13.9f %13.9f' % (nbins,
-                                                integLeft(a, b, f, nbins), integMid(a, b, f, nbins),
-                                                integTrap(a, b, f, nbins)))
-        print
-        for nbins in [4, 40, 400]:
-            print('%4s %13.9f %13.9f %13.9f' % (nbins,
-                                                integLeft(a, b, f, nbins) - exact,
-                                                integMid(a, b, f, nbins) - exact,
-                                                integTrap(a, b, f, nbins) - exact))
-        print
+        x = np.linspace(lower,upper,N)
 
-        from time import time  # from time module import time function
-        t0 = time()  # seconds
-        integLeft(0, 1, f, 1000)
-        t1 = time()
-        integMid(0, 1, f, 1000)
-        t2 = time()
-        integTrap(0, 1, f, 1000)
-        t3 = time()
+        dx = x[1] - x[0]
 
-        print("Time for 1000 bins:\n    %13.6f %13.6f %13.6f" %
-              ((t1 - t0), (t2 - t1), (t3 - t2)))
+        y = f(x)
 
+        r.append(np.sum(y * dx))
+    
+    return r
 
-    table_of_errors(0, 1, f, 5 / 6.)
-    from doctest import testmod
+if __name__ == "__main__":
+    app.run()
