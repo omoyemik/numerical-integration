@@ -1,4 +1,4 @@
-# clouds assignment 2 - Ex 1 --using Python, Flask
+# clouds 2, python/flask
 from flask import Flask
 import numpy as np
 import math
